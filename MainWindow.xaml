@@ -105,7 +105,6 @@
                 </StackPanel>
             </Border>
 
-            <!-- Информация о городе -->
             <Border Background="{StaticResource CardBackground}" 
                     CornerRadius="14" 
                     Padding="22" 
@@ -126,7 +125,7 @@
                                Foreground="{StaticResource TextSecondary}"
                                Margin="0,0,0,18"/>
 
-                    <!-- Основная информация о погоде -->
+                 
                     <Grid Margin="0,0,0,24">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -156,7 +155,7 @@
                         </StackPanel>
                     </Grid>
 
-                    <!-- Дополнительные параметры -->
+               
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -164,7 +163,7 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- Ветер -->
+                    
                         <Border Grid.Column="0" 
                                 Background="{StaticResource LightBlueColor}" 
                                 CornerRadius="10" 

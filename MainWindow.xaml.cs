@@ -15,6 +15,14 @@ namespace Weather
 {
     public partial class MainWindow : Window
     {
+    
+        private List<string> popularCities = new List<string>
+{
+    "Москва", "Санкт-Петербург", "Екатеринбург", "Новосибирск",
+    "Казань", "Нижний Новгород", "Челябинск", "Самара", "Омск",
+    "Ростов-на-Дону", "Уфа", "Красноярск", "Пермь", "Воронеж",
+    "Волгоград", "Краснодар", "Саратов", "Тюмень", "Тольятти"
+};
         DataResponce? responce;
         private float currentLat = 58.009671f;
         private float currentLon = 56.226184f;
@@ -58,7 +66,7 @@ namespace Weather
             }
             catch
             {
-                // Игнорируем ошибки при очистке
+               
             }
         }
 
@@ -123,7 +131,7 @@ namespace Weather
                 {
                     if (weatherData?.forecasts != null && weatherData.forecasts.Count > 0)
                     {
-                        // Берем только первые 4 дня
+                     
                         Days.Items.Clear();
 
                         int daysToShow = Math.Min(4, weatherData.forecasts.Count);
@@ -132,7 +140,6 @@ namespace Weather
                             Days.Items.Add(weatherData.forecasts[i].date.ToString("dd.MM.yyyy"));
                         }
 
-                        // Выбираем первый день
                         if (Days.Items.Count > 0)
                         {
                             Days.SelectedIndex = 0;
@@ -141,7 +148,6 @@ namespace Weather
                         string sourceInfo = fromCache ? " (из кэша)" : " (актуальные)";
                         LocationText.Text = $"{currentCity}{sourceInfo}";
 
-                        // Обновляем текущую погоду
                         UpdateCurrentWeatherUI(weatherData);
                     }
                     else
@@ -196,7 +202,7 @@ namespace Weather
 
             var currentHour = DateTime.Now.Hour;
 
-            // Находим ближайший час прогноза
+           
             var currentDayHour = forecast.hours
                 .OrderBy(h => Math.Abs(int.Parse(h.hour) - currentHour))
                 .FirstOrDefault()
@@ -209,8 +215,7 @@ namespace Weather
                     lTempCurrent.Text = $"{currentDayHour.temp}°";
                     lConditionCurrent.Text = currentDayHour.ToCondition();
 
-                    // Обновляем дополнительные параметры
-                    // Вам нужно добавить соответствующие поля в модель Hour и здесь их использовать
+                    
                     // lWindCurrent.Text = $"{currentDayHour.wind_speed} м/с";
                     // lHumidityCurrent.Text = $"{currentDayHour.humidity}%";
                     // lPressureCurrent.Text = $"{currentDayHour.pressure_mm} мм";
@@ -237,27 +242,27 @@ namespace Weather
                 SearchButton.IsEnabled = false;
                 SearchButton.Content = "Поиск...";
 
-                // Сначала пытаемся получить координаты
+                
                 var coordinates = await Geocoding.GetCoordinates(cityName);
                 currentLat = coordinates.lat;
                 currentLon = coordinates.lon;
                 currentCity = cityName;
 
-                // Пытаемся сначала загрузить из кэша
+             
                 var cachedData = await _cacheService.GetCachedWeatherAsync(currentCity, currentLat, currentLon);
                 if (cachedData != null)
                 {
-                    // Используем кэшированные данные
+                   
                     responce = cachedData;
                     UpdateUIFromCachedData(cachedData, true);
                     return;
                 }
 
-                // Если кэша нет, проверяем можем ли сделать запрос к API
+              
                 bool canRequest = await _cacheService.CanMakeRequestAsync();
                 if (!canRequest)
                 {
-                    // Нельзя сделать запрос - показываем кэш других городов или сообщение
+               
                     var remaining = await _cacheService.GetRemainingRequestsAsync();
                     var nextTime = await _cacheService.GetNextRequestTimeAsync();
 
@@ -268,12 +273,12 @@ namespace Weather
                             "Лимит запросов", MessageBoxButton.OK, MessageBoxImage.Warning);
                     }
 
-                    // Можно добавить список городов из кэша для выбора
+                    
                     ShowCachedCities();
                     return;
                 }
 
-                // Если можно сделать запрос - загружаем данные
+              
                 await LoadWeatherData(true);
             }
             catch (Exception ex)
@@ -294,7 +299,7 @@ namespace Weather
             {
                 if (cachedData?.forecasts != null && cachedData.forecasts.Count > 0)
                 {
-                    // Берем только первые 4 дня
+             
                     Days.Items.Clear();
 
                     int daysToShow = Math.Min(4, cachedData.forecasts.Count);
@@ -303,7 +308,7 @@ namespace Weather
                         Days.Items.Add(cachedData.forecasts[i].date.ToString("dd.MM.yyyy"));
                     }
 
-                    // Выбираем первый день
+              
                     if (Days.Items.Count > 0)
                     {
                         Days.SelectedIndex = 0;
@@ -312,7 +317,7 @@ namespace Weather
                     string sourceInfo = fromCache ? " (из кэша)" : " (актуальные)";
                     LocationText.Text = $"{currentCity}{sourceInfo}";
 
-                    // Обновляем UI
+                 
                     responce = cachedData;
                     Create(0);
                 }
@@ -321,7 +326,7 @@ namespace Weather
 
         private async void ShowCachedCities()
         {
-            // Получаем список городов из кэша
+           
             using (var db = new WeatherDbContext())
             {
                 var cachedCities = await db.WeatherCaches
@@ -390,24 +395,7 @@ namespace Weather
             _cacheService?.Dispose();
             base.OnClosed(e);
         }
-        // Добавьте этот метод в MainWindow.xaml.cs
-private async Task<bool> TryLoadFromCache(string city, float lat, float lon)
-{
-    try
-    {
-        var cachedData = await _cacheService.GetCachedWeatherAsync(city, lat, lon);
-        if (cachedData != null)
-        {
-            responce = cachedData;
-            UpdateUIFromCachedData(cachedData, true);
-            return true;
-        }
-    }
-    catch
-    {
-        // Игнорируем ошибки при загрузке из кэша
-    }
-    return false;
-}
+       
+
     }
 }

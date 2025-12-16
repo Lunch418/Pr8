@@ -67,7 +67,7 @@ namespace Weather.Classes
                 }
             }
 
-            // по умолчанию Пермь
+            
             return (58.009671f, 56.226184f);
         }
     }

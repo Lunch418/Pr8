@@ -7,7 +7,7 @@
              Height="72">
 
     <UserControl.Resources>
-        <!-- Локальные ресурсы для Item -->
+
         <SolidColorBrush x:Key="ItemTextPrimary" Color="#FF2C3E50"/>
         <SolidColorBrush x:Key="ItemTextSecondary" Color="#FF7F8C8D"/>
         <SolidColorBrush x:Key="ItemBorder" Color="#FFE0E6ED"/>
@@ -26,18 +26,18 @@
                 <ColumnDefinition Width="0.25*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Время -->
+
             <StackPanel Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center">
                 <TextBlock x:Name="lHour" 
                            Foreground="{StaticResource ItemTextPrimary}" 
                            FontSize="16" 
                            FontWeight="SemiBold"/>
-                <TextBlock Text="Время(час)" 
+                <TextBlock Text="Час" 
                            Foreground="{StaticResource ItemTextSecondary}" 
                            FontSize="12"/>
             </StackPanel>
 
-            <!-- Температура -->
+         
             <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">
                 <TextBlock x:Name="lTemp" 
                            Foreground="{StaticResource ItemTextPrimary}" 
@@ -48,7 +48,7 @@
                            FontSize="14"/>
             </StackPanel>
 
-            <!-- Погода -->
+        
             <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Center">
                 <TextBlock x:Name="lPrecType" 
                            Foreground="{StaticResource ItemTextPrimary}" 
@@ -58,7 +58,7 @@
                            FontWeight="SemiBold"/>
             </StackPanel>
 
-            <!-- Влажность -->
+       
             <StackPanel Grid.Column="3" VerticalAlignment="Center" HorizontalAlignment="Center">
                 <TextBlock x:Name="lHumidity" 
                            Foreground="{StaticResource ItemTextPrimary}" 
