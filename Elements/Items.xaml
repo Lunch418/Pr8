@@ -1,0 +1,25 @@
+﻿<UserControl x:Class="Weather.Elements.Items"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Weather.Elements"
+             mc:Ignorable="d" 
+                          d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="1*"/>
+
+        </Grid.ColumnDefinitions>
+
+        <Label x:Name="lHour"/>
+        <Label x:Name="lCondition" Grid.Column="1"/>
+        <Label x:Name="lHumidity" Grid.Column="2"/>
+        <Label x:Name="lPrecType" Grid.Column="3"/>
+        <Label x:Name="lTemp" Grid.Column="4"/>
+    </Grid>
+</UserControl>

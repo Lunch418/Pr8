@@ -8,27 +8,29 @@ namespace Weather.Classes
     public class GetWeather
     {
         public static string Url = "https://api.weather.yandex.ru/v2/forecast";
-        public static string Key = "demo.yandex_weather.api.key_code0893M9bao";
-
-        public static async Task<string> Get(float lat, float lon)
+        public static string Key = "demo_yandex_weather_api_key_ca6d09349ba0";
+        public static async Task<DataResponse> Get(float lat, float lon)
         {
-            string requestUrl = $"{Url}?lat={lat}&lon={lon}".Replace(",", ".");
+            DataResponse DataResponse = null;
+            string url = $"{Url}?lat={lat}&lon={lon}".Replace(",", ".");
 
-            using (HttpClient client = new HttpClient())
+
+            using (HttpClient Client = new HttpClient())
             {
-                using (HttpRequestMessage request = new HttpRequestMessage(
-                    HttpMethod.Get,
-                    requestUrl))
+                using (HttpRequestMessage Request = new HttpRequestMessage(HttpMethod.Get, url))
                 {
-                    request.Headers.Add("X-Yandex-Weather-Key", Key);
+                    Request.Headers.Add("X-Yandex-Weather-Key", Key);
 
-                    using (var response = await client.SendAsync(request))
+                    using (var Response = await Client.SendAsync(Request))
                     {
-                        string dataResponse = await response.Content.ReadAsStringAsync();
-                        return dataResponse;
+                        string ContentResponce = await Response.Content.ReadAsStringAsync();
+                        DataResponse = JsonConvert.DeserializeObject<DataResponse>(ContentResponce);
                     }
                 }
             }
+            return DataResponse;
         }
+
+
     }
 }
