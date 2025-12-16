@@ -5,291 +5,360 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Weather"
         mc:Ignorable="d"
-       Title="Погода" Height="700" Width="1000" MinHeight="600" MinWidth="800"
-        Background="#F5F5F5"
+        Title="Погода" Height="700" Width="1100" MinHeight="650" MinWidth="900"
+        Background="#FFF8FAFD"
         FontFamily="Segoe UI">
 
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <Window.Resources>
+        <DropShadowEffect x:Key="CardShadow" BlurRadius="12" Opacity="0.08" ShadowDepth="1"/>
+        <DropShadowEffect x:Key="ButtonShadow" BlurRadius="8" Opacity="0.15" ShadowDepth="1"/>
 
-        <!-- Панель поиска -->
-        <Border Grid.Row="0" 
-                Background="White" 
-                CornerRadius="10" 
-                Padding="15" 
-                Margin="0,0,0,15"
-                BorderThickness="1" 
-                BorderBrush="#E0E0E0">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+        <!-- Градиенты -->
+        <LinearGradientBrush x:Key="PrimaryGradient" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#FF4A90E2" Offset="0"/>
+            <GradientStop Color="#FF2A7BDE" Offset="1"/>
+        </LinearGradientBrush>
 
-                <TextBox x:Name="CityBox"
-                         Grid.Column="0"
-                         FontSize="16"
-                         VerticalContentAlignment="Center"
-                         Padding="12"
-                         BorderThickness="0"
-                         Background="Transparent"
-                         Foreground="#333333"
-                         KeyDown="CityBox_KeyDown"
-                         Text="Введите город..."
-                         GotFocus="CityBox_GotFocus"
-                         LostFocus="CityBox_LostFocus"/>
+        <LinearGradientBrush x:Key="SecondaryGradient" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#FF6BB5FF" Offset="0"/>
+            <GradientStop Color="#FF4A90E2" Offset="1"/>
+        </LinearGradientBrush>
 
-                <Button Grid.Column="1"
-                        Content="Поиск"
-                        Width="100"
-                        Height="40"
-                        Background="#2196F3"
-                        Foreground="White"
-                        BorderThickness="0"
-                
-                        FontSize="14"
-                        FontWeight="SemiBold"
-                        Click="SearchButton_Click"
-                        Margin="10,0,0,0"/>
-            </Grid>
-        </Border>
+        <!-- Цвета -->
+        <SolidColorBrush x:Key="PrimaryColor" Color="#FF2A7BDE"/>
+        <SolidColorBrush x:Key="LightBlueColor" Color="#FFE8F2FF"/>
+        <SolidColorBrush x:Key="TextPrimary" Color="#FF2C3E50"/>
+        <SolidColorBrush x:Key="TextSecondary" Color="#FF7F8C8D"/>
+        <SolidColorBrush x:Key="CardBackground" Color="#FFFFFFFF"/>
+        <SolidColorBrush x:Key="BorderColor" Color="#FFE0E6ED"/>
+    </Window.Resources>
 
-        <!-- Дни недели -->
-        <StackPanel Grid.Row="1" 
-                    Orientation="Horizontal" 
-                    HorizontalAlignment="Center"
-                    Margin="0,0,0,20">
-            <ToggleButton x:Name="TodayBtn"
-                          Content="Сегодня"
-                          Width="120"
-                          Height="40"
-                          Margin="0,0,10,0"
-                          Background="White"
-                          BorderBrush="#2196F3"
-                          BorderThickness="2"
-                          Foreground="#2196F3"
-                          FontSize="14"
-                          FontWeight="SemiBold"
-                          IsChecked="True"
-                          Click="DayButton_Click"/>
+    <Grid x:Name="MainGrid" Margin="20">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0.4*"/>
+            <ColumnDefinition Width="0.6*"/>
+        </Grid.ColumnDefinitions>
 
-            <ToggleButton x:Name="TomorrowBtn"
-                          Content="Завтра"
-                          Width="120"
-                          Height="40"
-                          Margin="0,0,10,0"
-                          Background="White"
-                          BorderBrush="#E0E0E0"
-                          BorderThickness="1"
-                          Foreground="#666666"
-                          FontSize="14"
-                          FontWeight="Normal"
-                          Click="DayButton_Click"/>
+        <!-- ЛЕВАЯ КОЛОНКА: Поиск и основная информация -->
+        <StackPanel Grid.Column="0" Margin="0,0,15,0">
 
-            <ToggleButton x:Name="DayAfterBtn"
-                          Content="Послезавтра"
-                          Width="120"
-                          Height="40"
-                          Background="White"
-                          BorderBrush="#E0E0E0"
-                          BorderThickness="1"
-                          Foreground="#666666"
-                          FontSize="14"
-                          FontWeight="Normal"
-                          Click="DayButton_Click"/>
-        </StackPanel>
-
-        <!-- Основная информация о погоде -->
-        <Border Grid.Row="2" 
-                Background="White" 
-                CornerRadius="15" 
-                Padding="25" 
-                Margin="0,0,0,20"
-                BorderThickness="1" 
-                BorderBrush="#E0E0E0"
-                >
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- Температура и описание -->
-                <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                    <TextBlock x:Name="CurrentDate"
-                               Text="2 мая, сегодня"
-                               FontSize="24"
-                               FontWeight="Bold"
-                               Foreground="#333333"
-                               Margin="0,0,0,10"/>
+            <!-- Панель поиска города -->
+            <Border Background="{StaticResource CardBackground}" 
+                    CornerRadius="14" 
+                    Padding="22" 
+                    Margin="0,0,0,18"
+                    Effect="{StaticResource CardShadow}"
+                    BorderBrush="{StaticResource BorderColor}"
+                    BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="Поиск города" 
+                               Foreground="{StaticResource TextSecondary}" 
+                               FontSize="14" 
+                               Margin="0,0,0,12"
+                               FontWeight="SemiBold"/>
 
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock x:Name="CurrentTemp"
-                                   Text="+23°"
-                                   FontSize="48"
-                                   FontWeight="Bold"
-                                   Foreground="#2196F3"
-                                   VerticalAlignment="Center"/>
+                        <TextBox x:Name="CityTextBox" 
+                                 Height="44" 
+                                 Width="220"
+                                 Background="{StaticResource LightBlueColor}"
+                                 Foreground="{StaticResource TextPrimary}"
+                                 BorderBrush="{StaticResource PrimaryColor}"
+                                 BorderThickness="1"
+                                 FontSize="15"
+                                 VerticalContentAlignment="Center"
+                                 Padding="14,0"
+                                 CaretBrush="{StaticResource PrimaryColor}"/>
 
-                        <StackPanel Margin="20,0,0,0" VerticalAlignment="Center">
-                            <TextBlock x:Name="WeatherDescription"
-                                       Text="Облачно с прояснениями"
-                                       FontSize="16"
-                                       Foreground="#666666"
-                                       Margin="0,0,0,5"/>
-
-                            <TextBlock x:Name="TempRange"
-                                       Text="+12°...+23°"
-                                       FontSize="14"
-                                       Foreground="#666666"/>
-                        </StackPanel>
+                        <Button x:Name="SearchButton"
+                                Content="Найти" 
+                                Click="SearchButton_Click"
+                                Width="100" 
+                                Height="44" 
+                                Margin="12,0,0,0" 
+                                Background="{StaticResource PrimaryGradient}" 
+                                Foreground="White"
+                                FontSize="15"
+                                FontWeight="SemiBold"
+                                BorderThickness="0"
+                                Cursor="Hand"
+                                Effect="{StaticResource ButtonShadow}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Cursor" Value="Hand"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="{StaticResource SecondaryGradient}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter Property="RenderTransform">
+                                                <Setter.Value>
+                                                    <ScaleTransform ScaleX="0.98" ScaleY="0.98"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
                     </StackPanel>
                 </StackPanel>
+            </Border>
 
-        
-                <Image Grid.Column="1"
-                       Source="/Images/cloudy.png"
-                       Width="120"
-                       Height="120"
-                       Margin="0,0,30,0"/>
+            <!-- Информация о городе -->
+            <Border Background="{StaticResource CardBackground}" 
+                    CornerRadius="14" 
+                    Padding="22" 
+                    Margin="0,0,0,18"
+                    Effect="{StaticResource CardShadow}"
+                    BorderBrush="{StaticResource BorderColor}"
+                    BorderThickness="1">
+                <StackPanel>
+                    <TextBlock x:Name="LocationText" 
+                               Text="Пермь, Россия" 
+                               FontSize="24" 
+                               Foreground="{StaticResource TextPrimary}" 
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,8"/>
 
-                <!-- Детали погоды -->
-                <Grid Grid.Column="2">
+                    <TextBlock Text="Текущая погода" 
+                               FontSize="16" 
+                               Foreground="{StaticResource TextSecondary}"
+                               Margin="0,0,0,18"/>
+
+                    <!-- Основная информация о погоде -->
+                    <Grid Margin="0,0,0,24">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Иконка погоды -->
+                        <Viewbox Grid.Column="0" Width="70" Height="70" Margin="0,0,20,0">
+                            <Canvas Width="48" Height="48">
+                                <Path Fill="#FF4A90E2" Data="M24,4 C33.941,4 42,12.059 42,22 C42,31.941 33.941,40 24,40 C14.059,40 6,31.941 6,22 C6,12.059 14.059,4 24,4 Z"/>
+                                <Path Fill="White" Data="M24,8 C31.732,8 38,14.268 38,22 C38,29.732 31.732,36 24,36 C16.268,36 10,29.732 10,22 C10,14.268 16.268,8 24,8 Z"/>
+                            </Canvas>
+                        </Viewbox>
+
+                        <!-- Температура и описание -->
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock x:Name="lTempCurrent" 
+                                       Text="" 
+                                       FontSize="36" 
+                                       Foreground="{StaticResource TextPrimary}" 
+                                       FontWeight="Bold"
+                                       Margin="0,0,0,4"/>
+                            <TextBlock x:Name="lConditionCurrent" 
+                                       Text="Ясно" 
+                                       FontSize="18" 
+                                       Foreground="{StaticResource TextSecondary}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Дополнительные параметры -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Ветер -->
+                        <Border Grid.Column="0" 
+                                Background="{StaticResource LightBlueColor}" 
+                                CornerRadius="10" 
+                                Padding="12"
+                                Margin="0,0,6,0">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="💨" FontSize="20" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Ветер" 
+                                           FontSize="13" 
+                                           Foreground="{StaticResource TextSecondary}"
+                                           Margin="0,4,0,2"/>
+                                <TextBlock x:Name="lWindCurrent" 
+                                           Text="3 м/с" 
+                                           FontSize="15" 
+                                           Foreground="{StaticResource TextPrimary}" 
+                                           FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Влажность -->
+                        <Border Grid.Column="1" 
+                                Background="{StaticResource LightBlueColor}" 
+                                CornerRadius="10" 
+                                Padding="12"
+                                Margin="6,0,6,0">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="💧" FontSize="20" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Влажность" 
+                                           FontSize="13" 
+                                           Foreground="{StaticResource TextSecondary}"
+                                           Margin="0,4,0,2"/>
+                                <TextBlock x:Name="lHumidityCurrent" 
+                                           Text="65%" 
+                                           FontSize="15" 
+                                           Foreground="{StaticResource TextPrimary}" 
+                                           FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Давление -->
+                        <Border Grid.Column="2" 
+                                Background="{StaticResource LightBlueColor}" 
+                                CornerRadius="10" 
+                                Padding="12"
+                                Margin="6,0,0,0">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="⬇️" FontSize="20" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Давление" 
+                                           FontSize="13" 
+                                           Foreground="{StaticResource TextSecondary}"
+                                           Margin="0,4,0,2"/>
+                                <TextBlock x:Name="lPressureCurrent" 
+                                           Text="750 мм" 
+                                           FontSize="15" 
+                                           Foreground="{StaticResource TextPrimary}" 
+                                           FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+
+        <!-- ПРАВАЯ КОЛОНКА: Прогноз погоды -->
+        <StackPanel Grid.Column="1">
+            <!-- Заголовок и выбор дня -->
+            <Border Background="{StaticResource CardBackground}" 
+                    CornerRadius="14" 
+                    Padding="22" 
+                    Margin="0,0,0,18"
+                    Effect="{StaticResource CardShadow}"
+                    BorderBrush="{StaticResource BorderColor}"
+                    BorderThickness="1">
+                <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Давление -->
-                    <StackPanel Grid.Column="0" HorizontalAlignment="Center">
-                        <TextBlock Text="Давление, мм рт. ст."
-                                   FontSize="12"
-                                   Foreground="#999999"
-                                   TextAlignment="Center"
-                                   Margin="0,0,0,5"/>
-                        <TextBlock x:Name="PressureValue"
-                                   Text="752"
-                                   FontSize="20"
-                                   FontWeight="Bold"
-                                   Foreground="#333333"
-                                   TextAlignment="Center"/>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Прогноз погоды" 
+                                   FontSize="22" 
+                                   Foreground="{StaticResource TextPrimary}" 
+                                   FontWeight="SemiBold"/>
+                        <TextBlock Text="Почасовой прогноз на выбранный день" 
+                                   FontSize="15" 
+                                   Foreground="{StaticResource TextSecondary}"
+                                   Margin="0,6,0,0"/>
                     </StackPanel>
 
-                    <!-- Влажность -->
-                    <StackPanel Grid.Column="1" HorizontalAlignment="Center">
-                        <TextBlock Text="Влажность"
-                                   FontSize="12"
-                                   Foreground="#999999"
-                                   TextAlignment="Center"
-                                   Margin="0,0,0,5"/>
-                        <TextBlock x:Name="HumidityValue"
-                                   Text="50%"
-                                   FontSize="20"
-                                   FontWeight="Bold"
-                                   Foreground="#333333"
-                                   TextAlignment="Center"/>
-                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <ComboBox SelectionChanged="SelectDay" 
+                                  Name="Days" 
+                                  Width="180" 
+                                  Height="38" 
+                                  Background="White"
+                                  Foreground="{StaticResource TextPrimary}"
+                                  BorderBrush="{StaticResource BorderColor}"
+                                  BorderThickness="1"
+                                  VerticalAlignment="Center"
+                                  Padding="12,0">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" 
+                                               Foreground="{StaticResource TextPrimary}" 
+                                               Padding="8"
+                                               FontSize="14"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
 
-                    <!-- Ветер -->
-                    <StackPanel Grid.Column="2" HorizontalAlignment="Center">
-                        <TextBlock Text="Ветер, м/с"
-                                   FontSize="12"
-                                   Foreground="#999999"
-                                   TextAlignment="Center"
-                                   Margin="0,0,0,5"/>
-                        <TextBlock x:Name="WindValue"
-                                   Text="3,8 юв"
-                                   FontSize="20"
-                                   FontWeight="Bold"
-                                   Foreground="#333333"
-                                   TextAlignment="Center"/>
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="3" HorizontalAlignment="Center">
-                        <TextBlock Text="Ощущается как"
-                                   FontSize="12"
-                                   Foreground="#999999"
-                                   TextAlignment="Center"
-                                   Margin="0,0,0,5"/>
-                        <TextBlock x:Name="FeelsLikeValue"
-                                   Text="+15°"
-                                   FontSize="20"
-                                   FontWeight="Bold"
-                                   Foreground="#333333"
-                                   TextAlignment="Center"/>
+                        <Button Content="Обновить" 
+                                Click="UpdateWeather" 
+                                Width="100" 
+                                Height="38" 
+                                Margin="12,0,0,0" 
+                                Background="{StaticResource PrimaryGradient}" 
+                                Foreground="White"
+                                VerticalAlignment="Center"
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                BorderThickness="0"
+                                Cursor="Hand"
+                                Effect="{StaticResource ButtonShadow}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="{StaticResource SecondaryGradient}"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
                     </StackPanel>
                 </Grid>
-            </Grid>
-        </Border>
-        <Grid Grid.Row="3">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+            </Border>
 
-            <TextBlock Grid.Row="0"
-                       Text="Прогноз по времени суток"
-                       FontSize="18"
-                       FontWeight="Bold"
-                       Foreground="#333333"
-                       Margin="0,0,0,15"/>
+            <!-- Заголовки таблицы -->
+            <Border Background="{StaticResource LightBlueColor}" 
+                    CornerRadius="10" 
+                    Padding="16" 
+                    Margin="0,0,0,12"
+                    BorderBrush="{StaticResource BorderColor}"
+                    BorderThickness="1">
+                <Grid x:Name="HeaderGrid">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.2*"/>
+                        <ColumnDefinition Width="0.3*"/>
+                        <ColumnDefinition Width="0.25*"/>
+                        <ColumnDefinition Width="0.25*"/>
+                    </Grid.ColumnDefinitions>
 
-            <ScrollViewer Grid.Row="1"
-                          VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled">
-                <StackPanel x:Name="TimeForecastPanel"
-                            Orientation="Vertical"
-                            Background="White"
-                          >
-                </StackPanel>
-            </ScrollViewer>
-        </Grid>
+                    <TextBlock Grid.Column="0" Text="Время" 
+                               Foreground="{StaticResource TextSecondary}" 
+                               FontSize="14" 
+                               VerticalAlignment="Center" 
+                               HorizontalAlignment="Center" 
+                               FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="1" Text="Температура" 
+                               Foreground="{StaticResource TextSecondary}" 
+                               FontSize="14" 
+                               VerticalAlignment="Center" 
+                               HorizontalAlignment="Center" 
+                               FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="2" Text="Погода" 
+                               Foreground="{StaticResource TextSecondary}" 
+                               FontSize="14" 
+                               VerticalAlignment="Center" 
+                               HorizontalAlignment="Center" 
+                               FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="3" Text="Влажность" 
+                               Foreground="{StaticResource TextSecondary}" 
+                               FontSize="14" 
+                               VerticalAlignment="Center" 
+                               HorizontalAlignment="Center" 
+                               FontWeight="SemiBold"/>
+                </Grid>
+            </Border>
+
+            <!-- Область с прогнозом -->
+            <Border Background="{StaticResource CardBackground}" 
+                    CornerRadius="14" 
+                    Padding="0"
+                    Effect="{StaticResource CardShadow}"
+                    BorderBrush="{StaticResource BorderColor}"
+                    BorderThickness="1"
+                    Height="340">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                              HorizontalScrollBarVisibility="Disabled"
+                              Padding="1">
+                    <StackPanel Name="parent" Margin="0"/>
+                </ScrollViewer>
+            </Border>
+        </StackPanel>
     </Grid>
-
-    <Window.Resources>
-        <!-- Эффект тени -->
-        <DropShadowEffect x:Key="DropShadowEffect"
-                          Color="#33000000"
-                          BlurRadius="10"
-                          Opacity="0.1"
-                          ShadowDepth="0"/>
-
-        <!-- Стиль для ToggleButton дней -->
-        <Style TargetType="ToggleButton" BasedOn="{StaticResource {x:Type ToggleButton}}">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ToggleButton">
-                        <Border x:Name="border"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="5">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"
-                                              Margin="10"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#2196F3"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#2196F3"/>
-                                <Setter Property="Foreground" Value="White"/>
-                                <Setter Property="FontWeight" Value="Bold"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="BorderBrush" Value="#2196F3"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </Window.Resources>
 </Window>

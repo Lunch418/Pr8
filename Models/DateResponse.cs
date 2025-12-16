@@ -6,125 +6,97 @@ using System.Threading.Tasks;
 
 namespace Weather.Models
 {
-    public class DataResponse
+    public class DataResponce
     {
-        public List<Forecast> forecasts { get; set; } = new List<Forecast>();
+        public List<Forecast> forecasts { get; set; }
     }
-
     public class Forecast
     {
         public DateTime date { get; set; }
-        public List<Hour> hours { get; set; } = new List<Hour>();
+        public List<Hour> hours { get; set; }
     }
-
     public class Hour
     {
-        public string hour { get; set; } = string.Empty;
-        public string condition { get; set; } = string.Empty;
+        public string hour { get; set; }
+        public string condition { get; set; }
         public int humidity { get; set; }
         public int prec_type { get; set; }
         public int temp { get; set; }
-        public int pressure { get; set; } // добавим давление
-        public string wind_dir { get; set; } = string.Empty; // направление ветра
-        public double wind_speed { get; set; } // скорость ветра
-        public int feels_like { get; set; } // ощущается как
-
-        public string ToPrecType()
-        {
-            string result = "";
-
-            switch (this.prec_type)
-            {
-                case 0:
-                    result = "Без осадков";
-                    break;
-                case 1:
-                    result = "Дождь";
-                    break;
-                case 2:
-                    result = "Дождь со снегом";
-                    break;
-                case 3:
-                    result = "Снег";
-                    break;
-            }
-            return result;
-        }
-
         public string ToCondition()
         {
             string result = "";
             switch (this.condition)
             {
                 case "clear":
-                    result = "Ясно";
+                    result = "ясно";
                     break;
                 case "partly-cloudy":
-                    result = "Малооблачно";
+                    result = "малооблачно";
                     break;
                 case "cloudy":
-                    result = "Облачно с прояснениями";
+                    result = "облачно с прояснениями";
                     break;
                 case "overcast":
-                    result = "Пасмурно";
+                    result = "пасмурно";
                     break;
                 case "light-rain":
-                    result = "Небольшой дождь";
+                    result = "небольшой дождь";
                     break;
                 case "rain":
-                    result = "Дождь";
+                    result = "дождь";
                     break;
                 case "heavy-rain":
-                    result = "Сильный дождь";
+                    result = "сильный дождь";
                     break;
                 case "showers":
-                    result = "Ливень";
+                    result = "ливень";
                     break;
                 case "wet-snow":
-                    result = "Дождь со снегом";
+                    result = "дождь со снегом";
                     break;
                 case "light-snow":
-                    result = "Небольшой снег";
+                    result = "небольшой снег";
                     break;
                 case "snow":
-                    result = "Снег";
+                    result = "снег";
                     break;
                 case "snow-showers":
-                    result = "Снегопад";
+                    result = "снегопад";
                     break;
                 case "hail":
-                    result = "Град";
+                    result = "град";
                     break;
-                case "thunderstorm":
-                    result = "Гроза";
+                case "thundershtorm":
+                    result = "гроза";
                     break;
                 case "thunderstorm-with-rain":
-                    result = "Дождь с грозой";
+                    result = "дождь с грозой";
                     break;
                 case "thunderstorm-with-hail":
-                    result = "Гроза с градом";
-                    break;
-                default:
-                    result = this.condition;
+                    result = "гроза с градом";
                     break;
             }
             return result;
         }
-
-        public string GetWindDirection()
+        public string ToPrecType()
         {
-            switch (wind_dir)
+            string result = "";
+            switch (this.prec_type)
             {
-                case "nw": return "сз";
-                case "n": return "с";
-                case "ne": return "св";
-                case "e": return "в";
-                case "se": return "юв";
-                case "s": return "ю";
-                case "sw": return "юз";
-                case "w": return "з";
-                default: return wind_dir;
+                case 0:
+                    result = "без осадков";
+                    break;
+                case 1:
+                    result = "дождь";
+                    break;
+                case 2:
+                    result = "дождь со снегом";
+                    break;
+                case 3:
+                    result = "снег";
+                    break;
             }
+            return result;
         }
     }
 }

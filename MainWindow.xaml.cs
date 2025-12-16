@@ -1,10 +1,12 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Weather.Classes;
 using Weather.Elements;
 using Weather.Models;
@@ -13,201 +15,399 @@ namespace Weather
 {
     public partial class MainWindow : Window
     {
-        private DataResponse? response; // делаем nullable
-        private Dictionary<int, string> timeOfDayNames = new Dictionary<int, string>
-        {
-            { 0, "Ночью" },
-            { 6, "Утром" },
-            { 12, "Днём" },
-            { 18, "Вечером" }
-        };
+        DataResponce? responce;
+        private float currentLat = 58.009671f;
+        private float currentLon = 56.226184f;
+        private string currentCity = "Пермь";
+        private readonly CacheService _cacheService;
+        private readonly DispatcherTimer _cleanupTimer;
 
         public MainWindow()
         {
             InitializeComponent();
-            InitializeAsync();
+            _cacheService = new CacheService();
+            LocationText.Text = currentCity;
+
+            _cleanupTimer = new DispatcherTimer();
+            _cleanupTimer.Interval = TimeSpan.FromHours(6);
+            _cleanupTimer.Tick += CleanupTimer_Tick;
+            _cleanupTimer.Start();
+
+            InitializeApplication();
         }
 
-        private async void InitializeAsync()
+        private async void InitializeApplication()
         {
             try
             {
-                response = await WeatherService.GetWeatherCached("Пермь");
-                UpdateWeatherDisplay(0);
+                await _cacheService.CleanupOldCacheAsync();
+                await LoadWeatherData();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка загрузки данных: {ex.Message}");
+                MessageBox.Show($"Ошибка инициализации: {ex.Message}",
+                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private void UpdateWeatherDisplay(int dayIndex)
+        private async void CleanupTimer_Tick(object? sender, EventArgs e)
         {
-            if (response?.forecasts == null || response.forecasts.Count == 0 || dayIndex >= response.forecasts.Count)
+            try
             {
-                MessageBox.Show("Нет данных для отображения");
+                await _cacheService.CleanupOldCacheAsync();
+            }
+            catch
+            {
+                // Игнорируем ошибки при очистке
+            }
+        }
+
+        public async Task LoadWeatherData(bool forceApi = false)
+        {
+            parent.Children.Clear();
+            Days.Items.Clear();
+
+            try
+            {
+                DataResponce? weatherData = null;
+                bool fromCache = false;
+
+                if (!forceApi)
+                {
+                    var cachedData = await _cacheService.GetCachedWeatherAsync(currentCity, currentLat, currentLon);
+                    if (cachedData != null)
+                    {
+                        weatherData = cachedData;
+                        fromCache = true;
+                        responce = weatherData;
+                    }
+                }
+
+                if (weatherData == null || forceApi)
+                {
+                    try
+                    {
+                        weatherData = await GetWeather.Get(currentLat, currentLon, currentCity, forceApi);
+                        responce = weatherData;
+                        fromCache = false;
+                    }
+                    catch (Exception apiEx)
+                    {
+                        if (!forceApi)
+                        {
+                            weatherData = await _cacheService.GetCachedWeatherAsync(currentCity, currentLat, currentLon);
+                            if (weatherData != null)
+                            {
+                                fromCache = true;
+                                responce = weatherData;
+
+                                Dispatcher.Invoke(() =>
+                                {
+                                    MessageBox.Show($"Используются кэшированные данные. API недоступно: {apiEx.Message}",
+                                        "Информация", MessageBoxButton.OK, MessageBoxImage.Warning);
+                                });
+                            }
+                            else
+                            {
+                                throw new Exception($"API недоступно: {apiEx.Message}", apiEx);
+                            }
+                        }
+                        else
+                        {
+                            throw new Exception($"API недоступно: {apiEx.Message}", apiEx);
+                        }
+                    }
+                }
+
+                Dispatcher.Invoke(() =>
+                {
+                    if (weatherData?.forecasts != null && weatherData.forecasts.Count > 0)
+                    {
+                        // Берем только первые 4 дня
+                        Days.Items.Clear();
+
+                        int daysToShow = Math.Min(4, weatherData.forecasts.Count);
+                        for (int i = 0; i < daysToShow; i++)
+                        {
+                            Days.Items.Add(weatherData.forecasts[i].date.ToString("dd.MM.yyyy"));
+                        }
+
+                        // Выбираем первый день
+                        if (Days.Items.Count > 0)
+                        {
+                            Days.SelectedIndex = 0;
+                        }
+
+                        string sourceInfo = fromCache ? " (из кэша)" : " (актуальные)";
+                        LocationText.Text = $"{currentCity}{sourceInfo}";
+
+                        // Обновляем текущую погоду
+                        UpdateCurrentWeatherUI(weatherData);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Нет данных о прогнозе погоды",
+                            "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    MessageBox.Show($"Ошибка загрузки погоды: {ex.Message}",
+                        "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                });
+            }
+        }
+
+        public void Create(int idForecast)
+        {
+            if (responce?.forecasts == null ||
+                idForecast < 0 ||
+                idForecast >= responce.forecasts.Count)
+            {
                 return;
             }
 
-            var forecast = response.forecasts[dayIndex];
+            var forecast = responce.forecasts[idForecast];
 
-            // Обновляем основную информацию
-            CurrentDate.Text = forecast.date.ToString("d MMMM, dddd").ToLower();
-
-            // Рассчитываем средние значения для дня
-            var allHours = forecast.hours;
-            if (allHours.Count > 0)
+            if (forecast.hours == null || forecast.hours.Count == 0)
             {
-                var avgTemp = (int)allHours.Average(h => h.temp);
-                var minTemp = allHours.Min(h => h.temp);
-                var maxTemp = allHours.Max(h => h.temp);
-                var avgPressure = (int)allHours.Average(h => h.pressure);
-                var avgHumidity = (int)allHours.Average(h => h.humidity);
-                var avgWindSpeed = Math.Round(allHours.Average(h => h.wind_speed), 1);
-                var avgFeelsLike = (int)allHours.Average(h => h.feels_like);
-
-                // Получаем наиболее частое состояние
-                var mostCommonCondition = allHours.GroupBy(h => h.condition)
-                                                 .OrderByDescending(g => g.Count())
-                                                 .First()
-                                                 .First();
-
-                CurrentTemp.Text = $"+{avgTemp}°";
-                WeatherDescription.Text = mostCommonCondition.ToCondition();
-                TempRange.Text = $"+{minTemp}°...+{maxTemp}°";
-                PressureValue.Text = avgPressure.ToString();
-                HumidityValue.Text = $"{avgHumidity}%";
-                WindValue.Text = $"{avgWindSpeed} {mostCommonCondition.GetWindDirection()}";
-                FeelsLikeValue.Text = $"+{avgFeelsLike}°";
+                return;
             }
 
-            UpdateTimeForecastPanel(forecast);
+            parent.Children.Clear();
+
+            foreach (Hour hour in forecast.hours)
+            {
+                parent.Children.Add(new Elements.Item(hour));
+            }
         }
 
-        private void UpdateTimeForecastPanel(Forecast forecast)
+        private void UpdateCurrentWeatherUI(DataResponce? weatherData)
         {
-            TimeForecastPanel.Children.Clear();
+            if (weatherData?.forecasts == null || weatherData.forecasts.Count == 0)
+                return;
 
-            // Группируем часы по времени суток
-            var timeGroups = new Dictionary<string, List<Hour>>();
+            var forecast = weatherData.forecasts[0];
+            if (forecast.hours == null || forecast.hours.Count == 0)
+                return;
 
-            foreach (var hour in forecast.hours)
+            var currentHour = DateTime.Now.Hour;
+
+            // Находим ближайший час прогноза
+            var currentDayHour = forecast.hours
+                .OrderBy(h => Math.Abs(int.Parse(h.hour) - currentHour))
+                .FirstOrDefault()
+                ?? forecast.hours.First();
+
+            Dispatcher.Invoke(() =>
             {
-                int hourInt = int.Parse(hour.hour);
-                string timeOfDay = GetTimeOfDay(hourInt);
-
-                if (!timeGroups.ContainsKey(timeOfDay))
-                    timeGroups[timeOfDay] = new List<Hour>();
-
-                timeGroups[timeOfDay].Add(hour);
-            }
-
-            // Создаем элементы для каждого времени суток
-            foreach (var group in timeGroups.OrderBy(g => GetTimeOfDayOrder(g.Key)))
-            {
-                var timeOfDay = group.Key;
-                var hours = group.Value;
-
-                if (hours.Count > 0)
+                if (currentDayHour != null)
                 {
-                    TimeForecastPanel.Children.Add(new Items(timeOfDay, hours));
+                    lTempCurrent.Text = $"{currentDayHour.temp}°";
+                    lConditionCurrent.Text = currentDayHour.ToCondition();
+
+                    // Обновляем дополнительные параметры
+                    // Вам нужно добавить соответствующие поля в модель Hour и здесь их использовать
+                    // lWindCurrent.Text = $"{currentDayHour.wind_speed} м/с";
+                    // lHumidityCurrent.Text = $"{currentDayHour.humidity}%";
+                    // lPressureCurrent.Text = $"{currentDayHour.pressure_mm} мм";
                 }
-            }
-        }
-
-        private int GetTimeOfDayOrder(string timeOfDay)
-        {
-            return timeOfDay switch
-            {
-                "Утром" => 1,
-                "Днём" => 2,
-                "Вечером" => 3,
-                "Ночью" => 4,
-                _ => 5
-            };
-        }
-
-        private string GetTimeOfDay(int hour)
-        {
-            if (hour >= 0 && hour < 6) return "Ночью";
-            if (hour >= 6 && hour < 12) return "Утром";
-            if (hour >= 12 && hour < 18) return "Днём";
-            return "Вечером";
+            });
         }
 
         private async void SearchButton_Click(object sender, RoutedEventArgs e)
         {
-            await FindCityWeather();
-        }
+            string cityName = CityTextBox.Text.Trim();
 
-        private async Task FindCityWeather()
-        {
-            if (string.IsNullOrWhiteSpace(CityBox.Text) || CityBox.Text == "Введите город...")
+            if (string.IsNullOrWhiteSpace(cityName))
             {
-                MessageBox.Show("Введите город!");
+                MessageBox.Show("Введите название города", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
+            var originalContent = SearchButton.Content;
+            var originalIsEnabled = SearchButton.IsEnabled;
+
             try
             {
-                response = await WeatherService.GetWeatherCached(CityBox.Text);
-                UpdateWeatherDisplay(0);
+                SearchButton.IsEnabled = false;
+                SearchButton.Content = "Поиск...";
 
-                // Активируем кнопку "Сегодня"
-                TodayBtn.IsChecked = true;
-                TomorrowBtn.IsChecked = false;
-                DayAfterBtn.IsChecked = false;
+                // Сначала пытаемся получить координаты
+                var coordinates = await Geocoding.GetCoordinates(cityName);
+                currentLat = coordinates.lat;
+                currentLon = coordinates.lon;
+                currentCity = cityName;
+
+                // Пытаемся сначала загрузить из кэша
+                var cachedData = await _cacheService.GetCachedWeatherAsync(currentCity, currentLat, currentLon);
+                if (cachedData != null)
+                {
+                    // Используем кэшированные данные
+                    responce = cachedData;
+                    UpdateUIFromCachedData(cachedData, true);
+                    return;
+                }
+
+                // Если кэша нет, проверяем можем ли сделать запрос к API
+                bool canRequest = await _cacheService.CanMakeRequestAsync();
+                if (!canRequest)
+                {
+                    // Нельзя сделать запрос - показываем кэш других городов или сообщение
+                    var remaining = await _cacheService.GetRemainingRequestsAsync();
+                    var nextTime = await _cacheService.GetNextRequestTimeAsync();
+
+                    if (nextTime.HasValue)
+                    {
+                        var timeLeft = nextTime.Value - DateTime.Now;
+                        MessageBox.Show($"Лимит запросов исчерпан. Попробуйте позже через {timeLeft.Minutes} минут.\nМожно попробовать другой город, данные которого уже есть в кэше.",
+                            "Лимит запросов", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+
+                    // Можно добавить список городов из кэша для выбора
+                    ShowCachedCities();
+                    return;
+                }
+
+                // Если можно сделать запрос - загружаем данные
+                await LoadWeatherData(true);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show($"Ошибка поиска города: {ex.Message}\nПроверьте название и попробуйте снова.",
+                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                SearchButton.IsEnabled = originalIsEnabled;
+                SearchButton.Content = originalContent;
             }
         }
 
-        private void CityBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        private void UpdateUIFromCachedData(DataResponce cachedData, bool fromCache)
         {
-            if (e.Key == System.Windows.Input.Key.Enter)
+            Dispatcher.Invoke(() =>
             {
-                SearchButton_Click(sender, e);
-            }
-        }
-
-        private void DayButton_Click(object sender, RoutedEventArgs e)
-        {
-            var button = sender as ToggleButton;
-            if (button == null) return;
-
-            // Сбрасываем другие кнопки
-            var buttons = new[] { TodayBtn, TomorrowBtn, DayAfterBtn };
-            foreach (var btn in buttons)
-            {
-                if (btn != button)
+                if (cachedData?.forecasts != null && cachedData.forecasts.Count > 0)
                 {
-                    btn.IsChecked = false;
+                    // Берем только первые 4 дня
+                    Days.Items.Clear();
+
+                    int daysToShow = Math.Min(4, cachedData.forecasts.Count);
+                    for (int i = 0; i < daysToShow; i++)
+                    {
+                        Days.Items.Add(cachedData.forecasts[i].date.ToString("dd.MM.yyyy"));
+                    }
+
+                    // Выбираем первый день
+                    if (Days.Items.Count > 0)
+                    {
+                        Days.SelectedIndex = 0;
+                    }
+
+                    string sourceInfo = fromCache ? " (из кэша)" : " (актуальные)";
+                    LocationText.Text = $"{currentCity}{sourceInfo}";
+
+                    // Обновляем UI
+                    responce = cachedData;
+                    Create(0);
+                }
+            });
+        }
+
+        private async void ShowCachedCities()
+        {
+            // Получаем список городов из кэша
+            using (var db = new WeatherDbContext())
+            {
+                var cachedCities = await db.WeatherCaches
+                    .AsNoTracking()
+                    .Select(c => c.City)
+                    .Distinct()
+                    .ToListAsync();
+
+                if (cachedCities.Any())
+                {
+                    string citiesList = string.Join("\n", cachedCities);
+                    MessageBox.Show($"Достигнут лимит запросов. Доступны данные из кэша для городов:\n{citiesList}\n\nВведите название одного из этих городов.",
+                        "Выберите город из кэша", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Кэш пуст. Дождитесь возможности сделать запрос к API.",
+                        "Нет данных", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
-
-            // Обновляем отображение для выбранного дня
-            int dayIndex = button == TodayBtn ? 0 : button == TomorrowBtn ? 1 : 2;
-            UpdateWeatherDisplay(dayIndex);
         }
 
-        private void CityBox_GotFocus(object sender, RoutedEventArgs e)
+        private void SelectDay(object sender, SelectionChangedEventArgs e)
         {
-            if (CityBox.Text == "Введите город...")
+            if (Days.SelectedIndex >= 0 &&
+                responce?.forecasts != null &&
+                Days.SelectedIndex < responce.forecasts.Count)
             {
-                CityBox.Text = "";
-                CityBox.Foreground = Brushes.Black;
+                Create(Days.SelectedIndex);
             }
         }
 
-        private void CityBox_LostFocus(object sender, RoutedEventArgs e)
+        private async void UpdateWeather(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(CityBox.Text))
+            var originalContent = (sender as Button)?.Content;
+            var originalIsEnabled = (sender as Button)?.IsEnabled ?? true;
+
+            try
             {
-                CityBox.Text = "Введите город...";
-                CityBox.Foreground = Brushes.Gray;
+                if (sender is Button button)
+                {
+                    button.IsEnabled = false;
+                    button.Content = "Обновление...";
+                }
+
+                await LoadWeatherData(true);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка обновления: {ex.Message}",
+                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                if (sender is Button button)
+                {
+                    button.IsEnabled = originalIsEnabled;
+                    button.Content = originalContent;
+                }
             }
         }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            _cleanupTimer.Stop();
+            _cacheService?.Dispose();
+            base.OnClosed(e);
+        }
+        // Добавьте этот метод в MainWindow.xaml.cs
+private async Task<bool> TryLoadFromCache(string city, float lat, float lon)
+{
+    try
+    {
+        var cachedData = await _cacheService.GetCachedWeatherAsync(city, lat, lon);
+        if (cachedData != null)
+        {
+            responce = cachedData;
+            UpdateUIFromCachedData(cachedData, true);
+            return true;
+        }
+    }
+    catch
+    {
+        // Игнорируем ошибки при загрузке из кэша
+    }
+    return false;
+}
     }
 }

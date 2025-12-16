@@ -1,21 +1,28 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 
 namespace Weather.Classes
 {
     public class WeatherDbContext : DbContext
     {
-        public DbSet<WeatherCache> Cache { get; set; }
-        public DbSet<ApiUsage> ApiUsage { get; set; }
+        public DbSet<WeatherCache> WeatherCaches { get; set; }
+        public DbSet<RequestLog> RequestLogs { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder options)
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            options.UseMySql("server=127.0.0.1;port=3306;user=root;password=;database=weather;", new MySqlServerVersion(new Version(8, 0))
-    );
+            string connectionString = "server=127.0.0.1;port=3306;user=root;password=;database=weather;";
+            optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<RequestLog>()
+                .HasIndex(r => r.RequestDate)
+                .IsUnique();
         }
     }
 }

@@ -1,0 +1,73 @@
+﻿<UserControl x:Class="Weather.Elements.Item"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             Height="72">
+
+    <UserControl.Resources>
+        <!-- Локальные ресурсы для Item -->
+        <SolidColorBrush x:Key="ItemTextPrimary" Color="#FF2C3E50"/>
+        <SolidColorBrush x:Key="ItemTextSecondary" Color="#FF7F8C8D"/>
+        <SolidColorBrush x:Key="ItemBorder" Color="#FFE0E6ED"/>
+    </UserControl.Resources>
+
+    <Border Background="White" 
+            CornerRadius="10" 
+            Padding="16"
+            BorderBrush="{StaticResource ItemBorder}"
+            BorderThickness="1">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0.2*"/>
+                <ColumnDefinition Width="0.3*"/>
+                <ColumnDefinition Width="0.25*"/>
+                <ColumnDefinition Width="0.25*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Время -->
+            <StackPanel Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock x:Name="lHour" 
+                           Foreground="{StaticResource ItemTextPrimary}" 
+                           FontSize="16" 
+                           FontWeight="SemiBold"/>
+                <TextBlock Text="Время(час)" 
+                           Foreground="{StaticResource ItemTextSecondary}" 
+                           FontSize="12"/>
+            </StackPanel>
+
+            <!-- Температура -->
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock x:Name="lTemp" 
+                           Foreground="{StaticResource ItemTextPrimary}" 
+                           FontSize="20" 
+                           FontWeight="Bold"/>
+                <TextBlock x:Name="lCondition" 
+                           Foreground="{StaticResource ItemTextSecondary}" 
+                           FontSize="14"/>
+            </StackPanel>
+
+            <!-- Погода -->
+            <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock x:Name="lPrecType" 
+                           Foreground="{StaticResource ItemTextPrimary}" 
+                           FontSize="14"
+                           TextWrapping="Wrap"
+                           TextAlignment="Center"
+                           FontWeight="SemiBold"/>
+            </StackPanel>
+
+            <!-- Влажность -->
+            <StackPanel Grid.Column="3" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock x:Name="lHumidity" 
+                           Foreground="{StaticResource ItemTextPrimary}" 
+                           FontSize="16" 
+                           FontWeight="Bold"/>
+                <TextBlock Text="влажность" 
+                           Foreground="{StaticResource ItemTextSecondary}" 
+                           FontSize="12"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>
