@@ -16,20 +16,33 @@ using Weather.Models;
 
 namespace Weather.Elements
 {
-    /// <summary>
-    /// Логика взаимодействия для Items.xaml
-    /// </summary>
     public partial class Items : UserControl
     {
-        public Items(Hour hour)
+        public Items(string timeOfDay, List<Hour> hours)
         {
             InitializeComponent();
 
-            lHour.Content = hour.hour;
-            lCondition.Content = hour.ToCondition();
-            lHumidity.Content = hour.humidity + "%";
-            lPrecType.Content = hour.ToPrecType();
-            lTemp.Content = hour.temp;
+            if (hours == null || hours.Count == 0)
+                return;
+
+            var minTemp = hours.Min(h => h.temp);
+            var maxTemp = hours.Max(h => h.temp);
+            var avgHumidity = (int)hours.Average(h => h.humidity);
+            var avgPressure = (int)hours.Average(h => h.pressure);
+            var avgWindSpeed = Math.Round(hours.Average(h => h.wind_speed), 1);
+            var avgFeelsLike = (int)hours.Average(h => h.feels_like);
+            var mostCommonCondition = hours.GroupBy(h => h.condition)
+                                          .OrderByDescending(g => g.Count())
+                                          .First()
+                                          .First();
+
+            lTimeOfDay.Text = timeOfDay;
+            lTempRange.Text = $"+{minTemp}°...+{maxTemp}°";
+            lCondition.Text = mostCommonCondition.ToCondition();
+            lHumidity.Text = $"{avgHumidity}%";
+            lPressure.Text = $"{avgPressure}";
+            lWind.Text = $"{avgWindSpeed} {mostCommonCondition.GetWindDirection()}";
+            lFeelsLike.Text = $"+{avgFeelsLike}°";
         }
     }
 }

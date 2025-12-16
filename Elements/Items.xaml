@@ -5,21 +5,89 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Weather.Elements"
              mc:Ignorable="d" 
-                          d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1*"/>
-            <ColumnDefinition Width="1*"/>
-            <ColumnDefinition Width="1*"/>
-            <ColumnDefinition Width="1*"/>
-            <ColumnDefinition Width="1*"/>
+             d:DesignHeight="100" d:DesignWidth="800">
 
-        </Grid.ColumnDefinitions>
+    <Border Background="White"
+            BorderBrush="#E0E0E0"
+            BorderThickness="0,0,0,1"
+            Padding="15,10">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="120"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="120"/>
+                <ColumnDefinition Width="120"/>
+                <ColumnDefinition Width="120"/>
+                <ColumnDefinition Width="120"/>
+            </Grid.ColumnDefinitions>
 
-        <Label x:Name="lHour"/>
-        <Label x:Name="lCondition" Grid.Column="1"/>
-        <Label x:Name="lHumidity" Grid.Column="2"/>
-        <Label x:Name="lPrecType" Grid.Column="3"/>
-        <Label x:Name="lTemp" Grid.Column="4"/>
-    </Grid>
+            <!-- Время суток -->
+            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                <TextBlock x:Name="lTimeOfDay"
+                           FontSize="16"
+                           FontWeight="Bold"
+                           Foreground="#333333"/>
+                <TextBlock x:Name="lTempRange"
+                           FontSize="14"
+                           Foreground="#666666"
+                           Margin="0,5,0,0"/>
+            </StackPanel>
+
+            <!-- Описание погоды -->
+            <TextBlock x:Name="lCondition"
+                       Grid.Column="1"
+                       FontSize="14"
+                       Foreground="#666666"
+                       VerticalAlignment="Center"
+                       TextWrapping="Wrap"/>
+
+            <!-- Давление -->
+            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                <TextBlock Text="Давление"
+                           FontSize="12"
+                           Foreground="#999999"/>
+                <TextBlock x:Name="lPressure"
+                           FontSize="14"
+                           FontWeight="SemiBold"
+                           Foreground="#333333"
+                           Margin="0,2,0,0"/>
+            </StackPanel>
+
+            <!-- Влажность -->
+            <StackPanel Grid.Column="3" VerticalAlignment="Center">
+                <TextBlock Text="Влажность"
+                           FontSize="12"
+                           Foreground="#999999"/>
+                <TextBlock x:Name="lHumidity"
+                           FontSize="14"
+                           FontWeight="SemiBold"
+                           Foreground="#333333"
+                           Margin="0,2,0,0"/>
+            </StackPanel>
+
+            <!-- Ветер -->
+            <StackPanel Grid.Column="4" VerticalAlignment="Center">
+                <TextBlock Text="Ветер, м/с"
+                           FontSize="12"
+                           Foreground="#999999"/>
+                <TextBlock x:Name="lWind"
+                           FontSize="14"
+                           FontWeight="SemiBold"
+                           Foreground="#333333"
+                           Margin="0,2,0,0"/>
+            </StackPanel>
+
+            <!-- Ощущается как -->
+            <StackPanel Grid.Column="5" VerticalAlignment="Center">
+                <TextBlock Text="Ощущается как"
+                           FontSize="12"
+                           Foreground="#999999"/>
+                <TextBlock x:Name="lFeelsLike"
+                           FontSize="14"
+                           FontWeight="SemiBold"
+                           Foreground="#333333"
+                           Margin="0,2,0,0"/>
+            </StackPanel>
+        </Grid>
+    </Border>
 </UserControl>
